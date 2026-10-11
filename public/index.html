@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IRCTC Railway Booking System - Live Seat Map">
+  <title>Railway Booking — Live Seat Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1a2235;
+      --bg-card-hover: #1e2a42;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.15);
+      --green-border: rgba(34, 197, 94, 0.3);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.15);
+      --amber-border: rgba(245, 158, 11, 0.3);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+      --red-border: rgba(239, 68, 68, 0.3);
+      --border: #1e293b;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1f35 0%, #0f1629 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .logo h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: background 0.3s;
+    }
+
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+    .status-dot.connecting { background: var(--amber); animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      gap: 2rem;
+    }
+
+    /* Auth Section */
+    .auth-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .auth-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .auth-form {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, select {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.2rem;
+      color: white;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    button:active { transform: translateY(0); }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.secondary {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+    }
+
+    button.success {
+      background: linear-gradient(135deg, var(--green), #16a34a);
+    }
+
+    /* Search Section */
+    .search-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .search-results {
+      margin-top: 1rem;
+    }
+
+    .train-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+
+    .train-card:hover {
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .train-info h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .train-info .train-number {
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .train-info .train-route {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .train-avail {
+      text-align: right;
+    }
+
+    .avail-count {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .avail-count.low { color: var(--amber); }
+    .avail-count.none { color: var(--red); }
+
+    .avail-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Seat Map */
+    .seat-map-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .seat-map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .seat-map-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+
+    .legend-dot.free {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+    }
+
+    .legend-dot.held {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+    }
+
+    .legend-dot.booked {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+    }
+
+    .coach-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .coach-tab {
+      padding: 0.5rem 1.2rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .coach-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 0.5rem;
+      max-width: 600px;
+    }
+
+    .seat {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      min-height: 40px;
+    }
+
+    .seat.free {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+    }
+
+    .seat.free:hover {
+      background: rgba(34, 197, 94, 0.25);
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .seat.held {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      color: var(--amber);
+    }
+
+    .seat.booked {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+      cursor: not-allowed;
+    }
+
+    .seat.selected {
+      background: rgba(99, 102, 241, 0.25);
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+      transform: scale(1.1);
+    }
+
+    .seat.updating {
+      animation: seatPulse 0.6s ease-in-out;
+    }
+
+    @keyframes seatPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Action Panel */
+    .action-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+
+    .action-panel.visible { display: block; }
+
+    .action-panel h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .action-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .detail-item {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+    }
+
+    .detail-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .detail-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      padding: 0.8rem 1.2rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.3s ease-out;
+      max-width: 350px;
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(22, 163, 74, 0.9));
+      color: white;
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
+      color: white;
+    }
+
+    .toast.info {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(124, 58, 237, 0.9));
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Bookings List */
+    .bookings-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .booking-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .booking-status {
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .booking-status.confirmed {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    .booking-status.cancelled {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .auth-form { flex-direction: column; }
+      .seat-grid { grid-template-columns: repeat(8, 1fr); }
+      .action-details { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🚂</div>
+        <h1>RailBook</h1>
+      </div>
+      <div class="connection-status">
+        <div class="status-dot" id="wsStatus"></div>
+        <span id="wsStatusText">Disconnected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+    <!-- Auth Section -->
+    <section class="auth-section" id="authSection">
+      <h2>🔐 Authentication</h2>
+      <div id="authForms">
+        <div class="auth-form" id="loginForm">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="user@example.com" value="demo@railway.com">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" value="password123">
+          </div>
+          <div class="form-group">
+            <label>Name (register only)</label>
+            <input type="text" id="registerName" placeholder="Your Name" value="Demo User">
+          </div>
+          <button onclick="doLogin()" id="loginBtn">Login</button>
+          <button onclick="doRegister()" class="secondary" id="registerBtn">Register</button>
+        </div>
+      </div>
+      <div id="userInfo" style="display:none">
+        <span id="userName" style="color: var(--green); font-weight: 600;"></span>
+        <button onclick="doLogout()" class="secondary" style="margin-left:1rem;">Logout</button>
+      </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="search-section">
+      <h2 style="font-size:1rem; font-weight:600; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">🔍 Search Trains</h2>
+      <div class="auth-form">
+        <div class="form-group">
+          <label>From</label>
+          <select id="searchFrom">
+            <option value="">Select station</option>
+            <option value="New Delhi" selected>New Delhi</option>
+            <option value="Kanpur">Kanpur</option>
+            <option value="Allahabad">Allahabad</option>
+            <option value="Mughal Sarai">Mughal Sarai</option>
+            <option value="Patna">Patna</option>
+            <option value="Kolkata">Kolkata</option>
+            <option value="Mumbai Central">Mumbai Central</option>
+            <option value="Surat">Surat</option>
+            <option value="Vadodara">Vadodara</option>
+            <option value="Ahmedabad">Ahmedabad</option>
+            <option value="Ajmer">Ajmer</option>
+            <option value="Jaipur">Jaipur</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>To</label>
+          <select id="searchTo">
+            <option value="">Select station</option>
+            <option value="New Delhi">New Delhi</option>
+            <option value="Kanpur">Kanpur</option>
+            <option value="Allahabad">Allahabad</option>
+            <option value="Mughal Sarai">Mughal Sarai</option>
+            <option value="Patna">Patna</option>
+            <option value="Kolkata" selected>Kolkata</option>
+            <option value="Mumbai Central">Mumbai Central</option>
+            <option value="Surat">Surat</option>
+            <option value="Vadodara">Vadodara</option>
+            <option value="Ahmedabad">Ahmedabad</option>
+            <option value="Ajmer">Ajmer</option>
+            <option value="Jaipur">Jaipur</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="searchDate">
+        </div>
+        <button onclick="searchTrains()">Search</button>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </section>
+
+    <!-- Seat Map Section -->
+    <section class="seat-map-section" id="seatMapSection" style="display:none;">
+      <div class="seat-map-header">
+        <h2 id="seatMapTitle">Seat Map</h2>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot free"></div> Free</div>
+          <div class="legend-item"><div class="legend-dot held"></div> Held</div>
+          <div class="legend-item"><div class="legend-dot booked"></div> Booked</div>
+        </div>
+      </div>
+      <div class="coach-tabs" id="coachTabs"></div>
+      <div class="seat-grid" id="seatGrid"></div>
+    </section>
+
+    <!-- Action Panel -->
+    <section class="action-panel" id="actionPanel">
+      <h3>🎫 Selected Seat</h3>
+      <div class="action-details" id="actionDetails"></div>
+      <div class="action-buttons" id="actionButtons"></div>
+    </section>
+
+    <!-- Bookings Section -->
+    <section class="bookings-section" id="bookingsSection" style="display:none;">
+      <h2 style="font-size:1rem; font-weight:600; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">📋 My Bookings</h2>
+      <div id="bookingsList"></div>
+      <button onclick="loadBookings()" class="secondary" style="margin-top:0.5rem;">Refresh</button>
+    </section>
+  </div>
+
+  <script>
+    // ─── State ────────────────────────────────────────────────
+    let token = localStorage.getItem('token') || '';
+    let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    let ws = null;
+    let lastStreamId = '0';
+    let reconnectTimer = null;
+    let selectedSeat = null;
+    let currentHoldId = null;
+    let currentTrainSearch = null;
+    let currentCoach = 'A';
+    let seatData = {};
+
+    const API = '';
+
+    // ─── Init ─────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set default date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('searchDate').value = tomorrow.toISOString().split('T')[0];
+
+      if (token && currentUser) {
+        showLoggedIn();
+      }
+    });
+
+    // ─── Auth ─────────────────────────────────────────────────
+    async function doRegister() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const name = document.getElementById('registerName').value;
+
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        token = data.token;
+        currentUser = data.user;
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        showLoggedIn();
+        toast('Registered successfully!', 'success');
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        token = data.token;
+        currentUser = data.user;
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        showLoggedIn();
+        toast('Logged in successfully!', 'success');
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    function doLogout() {
+      token = '';
+      currentUser = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      document.getElementById('authForms').style.display = 'block';
+      document.getElementById('userInfo').style.display = 'none';
+      document.getElementById('bookingsSection').style.display = 'none';
+      if (ws) ws.close();
+      toast('Logged out', 'info');
+    }
+
+    function showLoggedIn() {
+      document.getElementById('authForms').style.display = 'none';
+      document.getElementById('userInfo').style.display = 'block';
+      document.getElementById('userName').textContent = `✓ Logged in as ${currentUser.name} (${currentUser.email})`;
+      document.getElementById('bookingsSection').style.display = 'block';
+      loadBookings();
+      connectWebSocket();
+    }
+
+    // ─── Search ───────────────────────────────────────────────
+    async function searchTrains() {
+      const from = document.getElementById('searchFrom').value;
+      const to = document.getElementById('searchTo').value;
+      const date = document.getElementById('searchDate').value;
+
+      if (!from || !to || !date) {
+        toast('Please select from, to, and date', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/trains?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${date}`);
+        const data = await res.json();
+
+        currentTrainSearch = { from, to, date };
+        const container = document.getElementById('searchResults');
+
+        if (!data.trains || data.trains.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">No trains found for this route and date.</p>';
+          return;
+        }
+
+        container.innerHTML = data.trains.map(t => {
+          const availClass = t.availableSeats === 0 ? 'none' : t.availableSeats < 20 ? 'low' : '';
+          return `
+            <div class="train-card" onclick="loadSeatMap(${t.id}, '${t.from}', '${t.to}', '${t.date}', '${t.trainName}', '${t.trainNumber}')">
+              <div class="train-info">
+                <div class="train-number">#${t.trainNumber}</div>
+                <h3>${t.trainName}</h3>
+                <div class="train-route">${t.from} → ${t.to}</div>
+              </div>
+              <div class="train-avail">
+                <div class="avail-count ${availClass}">${t.availableSeats}</div>
+                <div class="avail-label">seats available</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        toast('Search failed: ' + err.message, 'error');
+      }
+    }
+
+    // ─── Seat Map ─────────────────────────────────────────────
+    async function loadSeatMap(trainId, from, to, date, trainName, trainNumber) {
+      try {
+        const res = await fetch(`${API}/trains/${trainId}/seats?date=${date}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+        const data = await res.json();
+
+        seatData = data;
+        document.getElementById('seatMapSection').style.display = 'block';
+        document.getElementById('seatMapTitle').textContent = `${trainName} (#${trainNumber}) — ${from} → ${to} — ${date}`;
+
+        // Build coach tabs
+        const coaches = Object.keys(data.coaches).sort();
+        const tabsContainer = document.getElementById('coachTabs');
+        tabsContainer.innerHTML = coaches.map(c =>
+          `<div class="coach-tab ${c === currentCoach ? 'active' : ''}" onclick="switchCoach('${c}')">${c}</div>`
+        ).join('');
+
+        if (!coaches.includes(currentCoach)) currentCoach = coaches[0];
+
+        renderSeats();
+
+        // Subscribe to WebSocket updates for this train+date
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'subscribe', trainId, date }));
+        }
+
+        // Scroll to seat map
+        document.getElementById('seatMapSection').scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        toast('Failed to load seat map: ' + err.message, 'error');
+      }
+    }
+
+    function switchCoach(coach) {
+      currentCoach = coach;
+      document.querySelectorAll('.coach-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.textContent === coach);
+      });
+      renderSeats();
+    }
+
+    function renderSeats() {
+      if (!seatData.coaches || !seatData.coaches[currentCoach]) return;
+
+      const seats = seatData.coaches[currentCoach];
+      const grid = document.getElementById('seatGrid');
+
+      grid.innerHTML = seats.map(s => {
+        const isSelected = selectedSeat && selectedSeat.seatId === s.seatId;
+        return `<div class="seat ${s.status} ${isSelected ? 'selected' : ''}"
+                     id="seat-${s.seatId}"
+                     onclick="selectSeat(${s.seatId}, ${s.seatNumber}, '${currentCoach}', '${s.status}')"
+                     title="Seat ${currentCoach}${s.seatNumber} — ${s.status}">
+                  ${s.seatNumber}
+                </div>`;
+      }).join('');
+    }
+
+    function selectSeat(seatId, seatNumber, coach, status) {
+      if (status === 'booked') {
+        toast('This seat is already booked', 'error');
+        return;
+      }
+
+      if (!token) {
+        toast('Please login first', 'error');
+        return;
+      }
+
+      selectedSeat = { seatId, seatNumber, coach, status };
+      renderSeats();
+
+      const panel = document.getElementById('actionPanel');
+      panel.classList.add('visible');
+
+      document.getElementById('actionDetails').innerHTML = `
+        <div class="detail-item"><div class="detail-label">Coach</div><div class="detail-value">${coach}</div></div>
+        <div class="detail-item"><div class="detail-label">Seat</div><div class="detail-value">${seatNumber}</div></div>
+        <div class="detail-item"><div class="detail-label">Route</div><div class="detail-value">${seatData.from || currentTrainSearch?.from} → ${seatData.to || currentTrainSearch?.to}</div></div>
+        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" style="color: ${status === 'free' ? 'var(--green)' : 'var(--amber)'}">${status.toUpperCase()}</div></div>
+      `;
+
+      let buttons = '';
+      if (status === 'free') {
+        buttons = `<button onclick="holdSeat()" class="success">🔒 Hold Seat (5 min)</button>`;
+      } else if (status === 'held') {
+        buttons = `<p style="color: var(--amber); font-size: 0.85rem;">This seat is currently held by someone.</p>`;
+      }
+      document.getElementById('actionButtons').innerHTML = buttons;
+
+      panel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ─── Hold ─────────────────────────────────────────────────
+    async function holdSeat() {
+      if (!selectedSeat || !seatData.trainId) return;
+
+      try {
+        const res = await fetch(`${API}/holds`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            trainId: seatData.trainId,
+            seatId: selectedSeat.seatId,
+            date: seatData.date,
+            from: seatData.from || currentTrainSearch?.from,
+            to: seatData.to || currentTrainSearch?.to,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        currentHoldId = data.holdId;
+        toast(`Seat ${selectedSeat.coach}${selectedSeat.seatNumber} held for 5 minutes!`, 'success');
+
+        // Update action panel
+        document.getElementById('actionButtons').innerHTML = `
+          <button onclick="confirmBooking()" class="success">✓ Confirm Booking</button>
+          <button onclick="releaseHold()" class="danger">✕ Release Hold</button>
+        `;
+
+        // Update seat status locally
+        updateSeatStatus(selectedSeat.seatId, 'held');
+      } catch (err) {
+        toast('Hold failed: ' + err.message, 'error');
+      }
+    }
+
+    async function releaseHold() {
+      if (!currentHoldId) return;
+
+      try {
+        const res = await fetch(`${API}/holds/${currentHoldId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        toast('Hold released', 'info');
+        currentHoldId = null;
+        updateSeatStatus(selectedSeat.seatId, 'free');
+        document.getElementById('actionPanel').classList.remove('visible');
+        selectedSeat = null;
+      } catch (err) {
+        toast('Release failed: ' + err.message, 'error');
+      }
+    }
+
+    // ─── Booking ──────────────────────────────────────────────
+    async function confirmBooking() {
+      if (!currentHoldId) return;
+
+      try {
+        const res = await fetch(`${API}/bookings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            holdId: currentHoldId,
+            idempotencyKey: `book-${currentHoldId}`,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        toast(`Booking confirmed! Payment: ${data.booking.paymentId}`, 'success');
+        currentHoldId = null;
+        updateSeatStatus(selectedSeat.seatId, 'booked');
+        document.getElementById('actionPanel').classList.remove('visible');
+        selectedSeat = null;
+        loadBookings();
+      } catch (err) {
+        toast('Booking failed: ' + err.message, 'error');
+      }
+    }
+
+    async function cancelBooking(bookingId) {
+      try {
+        const res = await fetch(`${API}/bookings/${bookingId}/cancel`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        toast('Booking cancelled', 'info');
+        loadBookings();
+      } catch (err) {
+        toast('Cancel failed: ' + err.message, 'error');
+      }
+    }
+
+    async function loadBookings() {
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API}/bookings/me`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        const container = document.getElementById('bookingsList');
+        if (!data.bookings || data.bookings.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No bookings yet.</p>';
+          return;
+        }
+
+        container.innerHTML = data.bookings.map(b => `
+          <div class="booking-item">
+            <div>
+              <strong>${b.trainName}</strong> (#${b.trainNumber})<br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">
+                ${b.from} → ${b.to} · Coach ${b.coach} Seat ${b.seatNumber} ·
+                ${new Date(b.date).toLocaleDateString()}
+              </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span class="booking-status ${b.status}">${b.status}</span>
+              ${b.status === 'confirmed' ? `<button onclick="cancelBooking(${b.id})" class="danger" style="padding:0.3rem 0.8rem; font-size:0.75rem;">Cancel</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load bookings:', err);
+      }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────
+    function updateSeatStatus(seatId, newStatus) {
+      if (!seatData.coaches) return;
+      for (const coach of Object.values(seatData.coaches)) {
+        for (const seat of coach) {
+          if (seat.seatId === seatId) {
+            seat.status = newStatus;
+          }
+        }
+      }
+      renderSeats();
+    }
+
+    // ─── WebSocket ────────────────────────────────────────────
+    function connectWebSocket() {
+      if (ws && ws.readyState === WebSocket.OPEN) return;
+
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+      const statusDot = document.getElementById('wsStatus');
+      const statusText = document.getElementById('wsStatusText');
+
+      statusDot.className = 'status-dot connecting';
+      statusText.textContent = 'Connecting...';
+
+      ws.onopen = () => {
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = 'Live';
+
+        // Resume from last known stream ID
+        if (lastStreamId !== '0') {
+          ws.send(JSON.stringify({ type: 'resume', lastStreamId }));
+        }
+
+        // Re-subscribe if we have an active seat map
+        if (seatData.trainId) {
+          ws.send(JSON.stringify({
+            type: 'subscribe',
+            trainId: seatData.trainId,
+            date: seatData.date,
+          }));
+        }
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === 'seat_update') {
+          handleSeatUpdate(msg.data);
+          if (msg.streamId) lastStreamId = msg.streamId;
+        }
+      };
+
+      ws.onclose = () => {
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Disconnected';
+
+        // Reconnect after 3 seconds
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(connectWebSocket, 3000);
+      };
+
+      ws.onerror = () => {
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Error';
+      };
+    }
+
+    function handleSeatUpdate(event) {
+      if (!seatData.coaches) return;
+
+      // Check if this update is for our current seat map
+      if (event.trainId !== seatData.trainId) return;
+
+      // If seatId is 0, this was a hold expiry — refresh the whole seat map
+      if (event.seatId === 0) {
+        if (seatData.trainId && currentTrainSearch) {
+          loadSeatMap(
+            seatData.trainId,
+            currentTrainSearch.from,
+            currentTrainSearch.to,
+            currentTrainSearch.date,
+            document.getElementById('seatMapTitle').textContent.split(' — ')[0],
+            ''
+          );
+        }
+        return;
+      }
+
+      // Update specific seat
+      updateSeatStatus(event.seatId, event.status);
+
+      // Flash animation
+      const seatEl = document.getElementById(`seat-${event.seatId}`);
+      if (seatEl) {
+        seatEl.classList.add('updating');
+        setTimeout(() => seatEl.classList.remove('updating'), 600);
+      }
+    }
+
+    // ─── Toast ────────────────────────────────────────────────
+    function toast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  </script>
+</body>
+</html>
